@@ -21,15 +21,18 @@
 package org.nuxeo.runtime;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nuxeo.runtime.RuntimeMessage.Level;
+import org.nuxeo.runtime.RuntimeMessage.Source;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
@@ -53,11 +56,24 @@ public class RuntimeInitializationTest {
 
     protected void checkDupe(boolean detected) {
         List<String> errors = Framework.getRuntime().getMessageHandler().getMessages(Level.ERROR);
+        List<RuntimeMessage> errorMessages = Framework.getRuntime().getMessageHandler().getRuntimeMessages(Level.ERROR);
         if (detected) {
             assertEquals(List.of("Duplicate component name: service:my.comp2"), errors);
+            assertEquals(List.of(Source.COMPONENT),
+                    errorMessages.stream().map(RuntimeMessage::getSource).collect(Collectors.toList()));
+            assertEquals(List.of("my.comp2"),
+                    errorMessages.stream().map(RuntimeMessage::getSourceId).collect(Collectors.toList()));
         } else {
             assertTrue(errors.isEmpty());
         }
+    }
+
+    protected void checkErrorSource(boolean fromExtension) {
+        List<RuntimeMessage> errors = Framework.getRuntime().getMessageHandler().getRuntimeMessages(Level.ERROR);
+        assertFalse(errors.isEmpty());
+        Source source = fromExtension ? Source.EXTENSION : Source.COMPONENT;
+        errors.forEach(e -> assertEquals(source, e.getSource()));
+        errors.forEach(e -> assertEquals("invalid.comp", e.getSourceId()));
     }
 
     @Test
@@ -99,6 +115,7 @@ public class RuntimeInitializationTest {
         assertEquals(List.of(
                 "Failed to activate component: org.nuxeo.runtime.RuntimeInitializationTestComponent (java.lang.RuntimeException: Fail on activate)"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.ERROR));
+        checkErrorSource(false);
         assertTrue(Framework.getRuntime().getMessageHandler().getMessages(Level.WARNING).isEmpty());
     }
 
@@ -107,6 +124,7 @@ public class RuntimeInitializationTest {
     public void testInvalidComponentActivateMessage() {
         assertEquals(List.of("Error message on activate"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.ERROR));
+        checkErrorSource(false);
         assertEquals(List.of("Warn message on activate"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.WARNING));
     }
@@ -119,6 +137,7 @@ public class RuntimeInitializationTest {
                 "Warning: target extension point 'xp' of 'invalid.comp' is unknown. Check your extension in component service:invalid.comp",
                 "Warning: target extension point 'null' of 'invalid.comp' is unknown. Check your extension in component service:invalid.comp"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.ERROR));
+        checkErrorSource(true);
         assertTrue(Framework.getRuntime().getMessageHandler().getMessages(Level.WARNING).isEmpty());
     }
 
@@ -128,6 +147,7 @@ public class RuntimeInitializationTest {
         assertEquals(List.of(
                 "Failed to instantiate component: org.nuxeo.runtime.Foo (org.nuxeo.runtime.RuntimeServiceException: java.lang.ClassNotFoundException: org.nuxeo.runtime.Foo)"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.ERROR));
+        checkErrorSource(false);
         assertTrue(Framework.getRuntime().getMessageHandler().getMessages(Level.WARNING).isEmpty());
     }
 
@@ -137,6 +157,7 @@ public class RuntimeInitializationTest {
         assertEquals(
                 List.of("Component service:invalid.comp notification of application started failed: Fail on start"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.ERROR));
+        checkErrorSource(false);
         assertTrue(Framework.getRuntime().getMessageHandler().getMessages(Level.WARNING).isEmpty());
     }
 
@@ -145,6 +166,7 @@ public class RuntimeInitializationTest {
     public void testInvalidComponentStartMessage() {
         assertEquals(List.of("Error message on start"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.ERROR));
+        checkErrorSource(false);
         assertEquals(List.of("Warn message on start"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.WARNING));
     }
@@ -155,6 +177,7 @@ public class RuntimeInitializationTest {
         assertEquals(List.of(
                 "Failed to register extension to: service:invalid.comp, xpoint: xp in component: service:invalid.comp (java.lang.RuntimeException: Fail on register)"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.ERROR));
+        checkErrorSource(true);
         assertTrue(Framework.getRuntime().getMessageHandler().getMessages(Level.WARNING).isEmpty());
     }
 
@@ -163,6 +186,7 @@ public class RuntimeInitializationTest {
     public void testInvalidComponentRegistrationMessage() {
         assertEquals(List.of("Error message on register"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.ERROR));
+        checkErrorSource(false);
         assertEquals(List.of("Warn message on register"),
                 Framework.getRuntime().getMessageHandler().getMessages(Level.WARNING));
     }

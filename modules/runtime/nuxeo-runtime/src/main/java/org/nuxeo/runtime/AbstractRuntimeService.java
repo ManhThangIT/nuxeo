@@ -35,6 +35,7 @@ import org.apache.commons.logging.LogFactory;
 import org.nuxeo.common.codec.CryptoProperties;
 import org.nuxeo.common.logging.JavaUtilLoggingHelper;
 import org.nuxeo.common.utils.TextTemplate;
+import org.nuxeo.runtime.RuntimeMessage.Source;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.model.ComponentInstance;
 import org.nuxeo.runtime.model.ComponentManager;
@@ -99,7 +100,9 @@ public abstract class AbstractRuntimeService implements RuntimeService {
         // get errors set by NuxeoDeployer
         String errs = System.getProperty("org.nuxeo.runtime.deployment.errors");
         if (errs != null) {
-            Arrays.asList(errs.split("\n")).forEach(err -> messageHandler.addMessage(RuntimeMessage.Level.ERROR, err));
+            Arrays.asList(errs.split("\n"))
+                  .forEach(err -> messageHandler.addMessage(new RuntimeMessage(
+                          org.nuxeo.runtime.RuntimeMessage.Level.ERROR, err, Source.DEPLOYMENT, null)));
             System.clearProperty("org.nuxeo.runtime.deployment.errors");
         }
     }
@@ -131,6 +134,7 @@ public abstract class AbstractRuntimeService implements RuntimeService {
         try {
             loadConfig();
         } catch (IOException e) {
+
             throw new RuntimeServiceException(e);
         }
 
