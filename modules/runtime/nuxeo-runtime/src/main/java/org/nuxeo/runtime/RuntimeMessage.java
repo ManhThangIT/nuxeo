@@ -90,6 +90,7 @@ public class RuntimeMessage {
      */
     public enum Source {
         DEPLOYMENT, //
+        CONFIG, //
         BUNDLE, //
         COMPONENT, //
         EXTENSION, //
