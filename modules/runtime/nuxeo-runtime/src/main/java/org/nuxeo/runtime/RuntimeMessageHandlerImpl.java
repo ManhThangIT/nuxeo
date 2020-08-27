@@ -44,7 +44,7 @@ public class RuntimeMessageHandlerImpl implements RuntimeMessageHandler, Compone
     @Override
     @Deprecated
     public void addWarning(String message) {
-        addMessage(Level.WARNING, message);
+        addMessage(new RuntimeMessage(Level.WARNING, message));
     }
 
     @Override
@@ -56,7 +56,7 @@ public class RuntimeMessageHandlerImpl implements RuntimeMessageHandler, Compone
     @Override
     @Deprecated
     public void addError(String message) {
-        addMessage(Level.ERROR, message);
+        addMessage(new RuntimeMessage(Level.ERROR, message));
     }
 
     @Override
@@ -102,11 +102,6 @@ public class RuntimeMessageHandlerImpl implements RuntimeMessageHandler, Compone
     @Override
     public void addMessage(RuntimeMessage message) {
         messages.add(message);
-    }
-
-    @Override
-    public void addMessage(Level level, String message) {
-        addMessage(new RuntimeMessage(level, message));
     }
 
     @Override

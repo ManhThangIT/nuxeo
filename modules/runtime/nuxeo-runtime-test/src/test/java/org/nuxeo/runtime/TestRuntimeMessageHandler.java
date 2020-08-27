@@ -47,8 +47,9 @@ public class TestRuntimeMessageHandler {
     }
 
     protected static void addTestMessages(String prefix) {
-        getMessageHandler().addMessage(Level.ERROR, String.format(PATTERN, prefix, Level.ERROR));
-        getMessageHandler().addMessage(Level.WARNING, String.format(PATTERN, prefix, Level.WARNING));
+        getMessageHandler().addMessage(new RuntimeMessage(Level.ERROR, String.format(PATTERN, prefix, Level.ERROR)));
+        getMessageHandler().addMessage(
+                new RuntimeMessage(Level.WARNING, String.format(PATTERN, prefix, Level.WARNING)));
     }
 
     protected void checkHasMessage(boolean hasMessage, Level level, String msg) {
